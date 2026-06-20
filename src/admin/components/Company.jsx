@@ -85,8 +85,21 @@ const renderMarkdown = (markdown) => {
 
 const Company = () => {
   const navigate = useNavigate();
-  const [company, setCompany] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [company, setCompany] = useState(() => {
+    try {
+      const cached = localStorage.getItem("company_data_cache");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !localStorage.getItem("company_data_cache");
+    } catch {
+      return true;
+    }
+  });
   const [error, setError] = useState("");
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
@@ -96,6 +109,7 @@ const Company = () => {
   const [logoError, setLogoError] = useState("");
   const [logoSuccess, setLogoSuccess] = useState("");
   const [logoVersion, setLogoVersion] = useState(Date.now());
+  const [logoLoadError, setLogoLoadError] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFormData, setEditFormData] = useState({
@@ -147,7 +161,7 @@ const Company = () => {
 
   const loadCompanyData = async () => {
     try {
-      setLoading(true);
+      setLoading(company ? false : true);
       setError("");
       const response = await fetchCompanyData();
 
@@ -155,6 +169,8 @@ const Company = () => {
 
       const companyData = response.data || response;
       setCompany(companyData);
+      setLogoLoadError(false);
+      localStorage.setItem("company_data_cache", JSON.stringify(companyData));
     } catch (error) {
       setError(error.message || "Failed to load company data");
       console.error("Failed to fetch company data:", error);
@@ -265,6 +281,7 @@ const Company = () => {
       // Update logo version to force refresh across all components
       const newVersion = Date.now();
       setLogoVersion(newVersion);
+      setLogoLoadError(false);
 
       // Dispatch event to update other components
       window.dispatchEvent(
@@ -1004,14 +1021,20 @@ const Company = () => {
                 <div className="company-overview">
                   <div className="logo-container-wrapper">
                     <div className="company-logo-container">
-                      <img
-                        src={`http://162.84.221.21/images/company/company_logo.png?v=${logoVersion}`}
-                        alt="Company Logo"
-                        className="company-logo"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
+                      {company?.logo_url && !logoLoadError ? (
+                        <img
+                          src={`${company.logo_url}?v=${logoVersion}`}
+                          alt="Company Logo"
+                          className="company-logo"
+                          onError={() => setLogoLoadError(true)}
+                        />
+                      ) : (
+                        <div className="company-logo-fallback">
+                          <span className="logo-text">
+                            {(company?.name || "O").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <button
                         onClick={openLogoModal}
                         className="logo-overlay logo-replace-btn"

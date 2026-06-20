@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/omninova/',
+  base: "/omninova/",
   server: {
-    port: 5001,     // change to any free port you want
-    host: true,     // 👈 allows access from other devices in your LAN
+    port: 5001,
+    host: true,
+    allowedHosts: ["omninovawai.com", ".omninovawai.com"], // 👈 add this
   },
-})
+});

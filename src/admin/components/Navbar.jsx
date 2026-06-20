@@ -1,14 +1,32 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { fetchCompanyData } from "../utils/auth";
+import { fetchCompanyData, getUser } from "../utils/auth";
+import { API_CONFIG } from "../config/api";
 import "./Navbar.css";
 
 const Navbar = ({ onLogout, userName }) => {
   const location = useLocation();
-  const [companyData, setCompanyData] = useState(null);
+  const [companyData, setCompanyData] = useState(() => {
+    try {
+      const cached = localStorage.getItem("company_data_cache");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [logoError, setLogoError] = useState("");
   const [logoVersion, setLogoVersion] = useState(Date.now());
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const cachedUser = (() => {
+    try {
+      return getUser();
+    } catch {
+      return null;
+    }
+  })();
+
+  const displayUserName = userName || cachedUser?.name || cachedUser?.username || "User";
 
   useEffect(() => {
     const loadCompanyData = async () => {
@@ -22,6 +40,8 @@ const Navbar = ({ onLogout, userName }) => {
         }
 
         setCompanyData(companyInfo);
+        setLogoError("");
+        localStorage.setItem("company_data_cache", JSON.stringify(companyInfo));
       } catch (error) {
         console.error("Failed to fetch company data:", error);
       }
@@ -29,6 +49,7 @@ const Navbar = ({ onLogout, userName }) => {
 
     const handleLogoUpdate = (event) => {
       setLogoVersion(event.detail.version);
+      setLogoError("");
     };
 
     loadCompanyData();
@@ -54,19 +75,22 @@ const Navbar = ({ onLogout, userName }) => {
       <nav className="navbar">
         <div className="navbar-container">
           <div className="navbar-brand">
-            {logoError ? (
-              <div className="logo-placeholder error">
-                <span className="logo-fallback">[LOGO]</span>
-                <span style={{ fontSize: "8px", color: "red" }}>Error</span>
-              </div>
-            ) : (
+            {companyData?.logo_url && !logoError ? (
               <div className="logo-container">
                 <img
-                  src={`http://162.84.221.21/images/company/company_logo.png?v=${logoVersion}`}
+                  src={`${companyData.logo_url}?v=${logoVersion}`}
                   alt="Company Logo"
                   className="navbar-logo"
                   onError={handleLogoError}
                 />
+              </div>
+            ) : (
+              <div className="logo-placeholder">
+                <span className="logo-fallback">
+                  {(companyData?.name || companyData?.company_name || "O")
+                    .charAt(0)
+                    .toUpperCase()}
+                </span>
               </div>
             )}
 
@@ -136,7 +160,7 @@ const Navbar = ({ onLogout, userName }) => {
           <div className="navbar-actions">
             <div className="user-info">
               <span className="welcome-text">Welcome,</span>
-              <span className="user-name">{userName || "User"}</span>
+              <span className="user-name">{displayUserName}</span>
             </div>
 
             <button onClick={onLogout} className="logout-btn">
@@ -174,7 +198,7 @@ const Navbar = ({ onLogout, userName }) => {
           {/* Mobile User Info */}
           <div className="mobile-user-info">
             <span className="mobile-welcome-text">Welcome,</span>
-            <span className="mobile-user-name">{userName || "User"}</span>
+            <span className="mobile-user-name">{displayUserName}</span>
           </div>
 
           {/* Mobile Navigation */}

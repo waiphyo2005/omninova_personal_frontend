@@ -20,8 +20,8 @@ const Login = () => {
       setLogoVersion(event.detail.version);
     };
 
-    window.addEventListener('logoUpdated', handleLogoUpdate);
-    return () => window.removeEventListener('logoUpdated', handleLogoUpdate);
+    window.addEventListener("logoUpdated", handleLogoUpdate);
+    return () => window.removeEventListener("logoUpdated", handleLogoUpdate);
   }, []);
 
   const handleInputChange = (e) => {
@@ -51,7 +51,7 @@ const Login = () => {
             message: data.message,
             token_type: data.token_type,
             expires_in: data.expires_in,
-          })
+          }),
         );
 
         // Redirect to admin profile
@@ -78,7 +78,7 @@ const Login = () => {
               </div>
             ) : (
               <img
-                src={`http://162.84.221.21/images/company/company_logo.png?v=${logoVersion}`}
+                src={`http://omninovawai/images/company/company_logo.png?v=${logoVersion}`}
                 alt="OmniNova Logo"
                 className="login-logo-image"
                 onError={() => setLogoError(true)}
