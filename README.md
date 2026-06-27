@@ -173,5 +173,3 @@ npm run preview  # Preview production build
 ## License
 
 This project is open source and available under the MIT License.
-# omninova-frontend-admin
-# omninova-frontend-admin
